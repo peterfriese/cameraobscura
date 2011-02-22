@@ -125,7 +125,7 @@
 					onTouchStart(event);
 				});
 
-	 			var socket = new io.Socket(); 
+	 			var socket = new io.Socket(null, {transports: ['websocket', 'flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']}); 
 	 			socket.connect();
 	 			socket.on('connect', function() {
 	 				
