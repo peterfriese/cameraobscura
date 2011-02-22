@@ -25,20 +25,21 @@
  
 			canvas {
 				background-color: #333;
-				border: 1px solid #999999;
+				border: 0px;
 				-webkit-touch-callout: none;
 				-webkit-user-select: none;
-				cursor: crosshair;				
+				cursor: crosshair;
 			}
 		</style>	
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js"></script>
+		<script type="text/javascript" src="/scripts/jquery-1.4.4.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script> 
 		<script>
 			jQuery(function($) {
 
 				var resizeCanvas = function () {
-					var canvasWidth = $(document).width();
+					var canvasWidth = $(document).width() - $("#toolbar").width();
 					var canvasHeight = $(document).height();
+					alert("w: " + canvasWidth + ", h: " + canvasHeight);
 			
 					$(canvas).attr("height", canvasHeight);
 					$(canvas).attr("width", canvasWidth);
@@ -173,7 +174,11 @@
 		</script>
 	</head>
 	<body>
-		<canvas id="canvas">
-		</canvas>
+		<div style="width: 100%">
+			<div id="toolbar" style="background-color: #111; height: 100%; width:50px; float:left">
+				T
+			</div>
+			<canvas id="canvas"></canvas>
+		</div>
 	</body>
 </html>
