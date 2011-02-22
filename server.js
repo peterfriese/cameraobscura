@@ -26,7 +26,7 @@ app.get('/', function(request, response) {
 // -----------------------------------------------------------------------
 // Start the server
 // -----------------------------------------------------------------------
-var port = 3000;
+var port = 4000;
 app.listen(port);
 console.log("Camera Obscura server listening on port " + port + ".");
 
