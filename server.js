@@ -34,6 +34,7 @@ var socket = io.listen(app);
 socket.on('connection', function(client) {
 	console.log('Client ' + client.sessionId + ' connected.')
 	client.on('message', function(message) {
+		console.log('Received message: ' + sys.inspect(message));
 		client.broadcast(message);
 	});
 	client.on('disconnect', function() {

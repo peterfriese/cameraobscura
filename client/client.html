@@ -47,14 +47,7 @@
 				var canvas = $("canvas");
 				resizeCanvas();
 
-				var pen = canvas[0].getContext("2d");
-				pen.lineWidth = 5;
-				pen.lineCap = "butt";
-				pen.lineJoin = "round";
-				pen.strokeStyle = "#0066CC";
-				pen.shadowColor = "#0066CC";
-				pen.shadowBlur = 2;
-				var lastPenPoint = null;
+				var pens = [];
 
 				var deviceAgent = navigator.userAgent.toLowerCase();
 				var isIPhone = deviceAgent.match(/(iphone|ipod|ipad)/);
@@ -67,28 +60,58 @@
 					});
 				};
 
-				var sendCommand = function(command, point) {
-					socket.send({command: command, point: point});
+				var sendCommand = function(command) {
+					var penInfo = pens['local'];
+					socket.send({
+							command: command, 
+							penInfo: penInfo
+						});
 				};
 
-				var moveTo = function(x, y) {
+				var moveTo = function(x, y, who) {
 					var localPosition = getCanvasLocalCoordinates(x, y);
-					lastPenPoint = {
+					var penPoint = {
 						x: localPosition.x,
 						y: localPosition.y
 					};
-					pen.beginPath();
-					pen.moveTo(lastPenPoint.x, lastPenPoint.y);					
+					var penInfo = {
+						point: penPoint
+					};
+					pens[who] = penInfo;
 				};
 
-				var lineTo = function(x, y) {
+				var lineTo = function(x, y, who) {
 					var localPosition = getCanvasLocalCoordinates(x, y);
-					lastPenPoint = {
+					var penPoint = {
 						x: localPosition.x,
 						y: localPosition.y	
 					};
-					pen.lineTo(lastPenPoint.x, lastPenPoint.y);
+
+					var penInfo = pens[who];
+					var lastPenPoint = penInfo.point;
+					console.log('Last point: ' + pens[who].point.x + ':' + pens[who].point.y);
+
+					var pen = canvas[0].getContext("2d");
+					pen.lineWidth = 5;
+					pen.lineCap = "butt";
+					pen.lineJoin = "round";
+					if (who == 'local') {
+						pen.strokeStyle = "#0066CC";
+						pen.shadowColor = "#0066CC";
+					}
+					else {
+						pen.strokeStyle = "#330044";
+						pen.shadowColor = "#330044";						
+					}
+					pen.shadowBlur = 2;
+					pen.beginPath();
+					pen.moveTo(lastPenPoint.x, lastPenPoint.y);
+
+					pen.lineTo(penPoint.x, penPoint.y);
 					pen.stroke();
+					penInfo.point = penPoint;
+					pens[who] = penInfo;
+					console.log('Last point: ' + pens[who].point.x + ':' + pens[who].point.y);
 				};
 
 				var getTouchEvent = function(event) {
@@ -102,8 +125,8 @@
 					var touch = getTouchEvent(event);
 					event.preventDefault();
 
-					moveTo(touch.pageX, touch.pageY);					
-					sendCommand('moveTo', lastPenPoint);
+					moveTo(touch.pageX, touch.pageY, 'local');
+					sendCommand('moveTo');
 
 					canvas.bind( (isIPhone ? "touchmove" : "mousemove"), onTouchMove);
 					canvas.bind( (isIPhone ? "touchend": "mouseup"), onTouchEnd);
@@ -111,9 +134,8 @@
 
 				var onTouchMove = function(event) {
 					var touch = getTouchEvent(event);
-					
-					lineTo(touch.pageX, touch.pageY);
-					sendCommand('lineTo', lastPenPoint);
+					lineTo(touch.pageX, touch.pageY, 'local');
+					sendCommand('lineTo');
 				};
 
 				var onTouchEnd = function(event) {
@@ -128,22 +150,23 @@
 	 			var socket = new io.Socket(null, {transports: ['websocket', 'flashsocket', 'htmlfile', 'xhr-multipart', 'xhr-polling']}); 
 	 			socket.connect();
 	 			socket.on('connect', function() {
-	 				
+	 				console.log('Connected to host ' + socket.host);
 	 			});
 	 			socket.on('message', function(message) {
 	 				var cmd = message.command;
-	 				var point = message.point;
+	 				var penInfo = message.penInfo;
+	 				var point = penInfo.point;
 	 				if (cmd != undefined) {
 	 					if (cmd == 'moveTo') {
-	 						moveTo(point.x, point.y);
+	 						moveTo(point.x, point.y, 'remote');
 	 					}
 	 					else if (cmd == 'lineTo') {
-	 						lineTo(point.x, point.y);
+	 						lineTo(point.x, point.y, 'remote');
 	 					}
 	 				}
 	 			});
 	 			socket.on('disconnect', function() {
-	 				
+	 				console.log("Disconnected from host " + socket.host);
 	 			});
 
 			});
